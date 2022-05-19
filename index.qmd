@@ -1,16 +1,22 @@
 ---
-title: "Elevation_data"
+title: "Elevación con R y Python"
 toc: true
 toc-title: "Tabla de Contenidos"
 toc-location: left
 ---
 
-This is a Quarto website.
-
 ## Introducción
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+En esta oportunidad vamos a presentar la metodología para manejar datos de elevación descargados de plataformas conocidas.
 
 ```{r}
 1 + 1
 ```
+
+### Descarga de USSG
+
+Podemos usar
+
+![](img/descarga_earth_data.png){#figure1 fig-align="center" width="800"}
+
+Vamos a incluir un flujo

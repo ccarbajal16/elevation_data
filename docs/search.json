@@ -2,9 +2,9 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Elevation_data",
+    "title": "Elevación con R y Python",
     "section": "",
-    "text": "This is a Quarto website."
+    "text": "En esta oportunidad vamos a presentar la metodología para manejar datos de elevación descargados de plataformas conocidas.\n\n1 + 1\n\n[1] 2\n\n\n\n\nPodemos usar\n\n\n\n\n\nVamos a incluir un flujo"
   },
   {
     "objectID": "index.html#introducción",
