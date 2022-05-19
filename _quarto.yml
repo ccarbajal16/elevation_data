@@ -3,9 +3,14 @@ project:
   output-dir: docs
 
 website:
-  title: "elevation_data"
+  title: "Elevación con R y Python"
+  search: 
+    location: navbar
+    type: textbox
   navbar:
-    background: primary
+    title: false
+    logo: "img/dibujo_labsaf_color.svg"
+    background: "#c3e3cb"
     left:
       - href: index.qmd
         text: Home
