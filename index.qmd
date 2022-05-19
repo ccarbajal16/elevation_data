@@ -1,8 +1,12 @@
 ---
 title: "Manejo de datos de elevación con Python y R"
+toc: true
+toc-title: "Tabla de Contenidos"
 ---
 
 This is a Quarto website.
+
+## Introducción
 
 To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
 
