@@ -2,6 +2,7 @@
 title: "Manejo de datos de elevación con Python y R"
 toc: true
 toc-title: "Tabla de Contenidos"
+toc-location: left
 ---
 
 This is a Quarto website.
