@@ -2,14 +2,14 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Manejo de datos de elevación con Python y R",
+    "title": "Elevation_data",
     "section": "",
     "text": "This is a Quarto website."
   },
   {
     "objectID": "index.html#introducción",
     "href": "index.html#introducción",
-    "title": "Manejo de datos de elevación con Python y R",
+    "title": "Elevation_data",
     "section": "Introducción",
     "text": "Introducción\nTo learn more about Quarto websites visit https://quarto.org/docs/websites.\n\n1 + 1\n\n[1] 2"
   },
