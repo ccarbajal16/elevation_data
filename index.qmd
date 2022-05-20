@@ -1,22 +1,146 @@
 ---
-title: "Elevación con R y Python"
+title: "Datos de Elevación con R"
 toc: true
 toc-title: "Tabla de Contenidos"
 toc-location: left
+bibliography: references.bib
 ---
 
 ## Introducción
 
-En esta oportunidad vamos a presentar la metodología para manejar datos de elevación descargados de plataformas conocidas.
+En esta oportunidad vamos a presentar la metodología para manejar datos de un modelo de elevación digital (DSM), para nuestro caso hemos elegido emplear el [NASADEM](https://developers.google.com/earth-engine/datasets/catalog/NASA_NASADEM_HGT_001) [@nasajpl2020], los cuales serán descargados de plataformas oficiales y que una vez con los archivos en formato ráster disponibles, procederemos a usar paquetes de R como Terra para lograr manejar de manera eficiente este tipo de archivos. Nuestro objetivo será contar con un mapa de elevación que cubre el ámbito de una cuenca.
 
-```{r}
-1 + 1
+### Descarga de datos NASADEM_HGT
+
+Los productos de datos de NASADEM se derivaron de los datos de telemetría originales de la Misión Topográfica de Radar del Transbordador (SRTM), una colaboración entre la NASA y la Agencia Nacional de Inteligencia Geoespacial (NGA), así como la participación de las agencias espaciales alemana e italiana. El enfoque principal de SRTM fue generar un DEM casi global de la Tierra utilizando interferometría de radar.
+
+Las capas de productos de datos **NASADEM_HGT** incluyen el **DEM (**formato HGT**)**, número de escenas (**NUM**) y un conjunto de datos de cuerpos de agua SRTM actualizado (**water mask**). El tamaño del pixel es alrededor de los 30 metros, además la capa presenta unidades en metros y el tipo de datos son enteros de 16 bits. Mayores detalles técnicos sobre esta fuente de datos lo encuentran [aquí.](https://lpdaac.usgs.gov/documents/592/NASADEM_User_Guide_V1.pdf)
+
+Para acceder a los datos emplearemos el servicio de búsqueda del [NASA Earthdata](https://search.earthdata.nasa.gov/search?q=C1546314043-LPDAAC_ECS), el mismo que requiere estar registrado para contar con nuestro usuario y contraseña, en caso contrario no podremos acceder al servicio de descarga.
+
+Como primera acción debemos diriginos sobre el mapa de fondo al sitio de donde necesitamos descargar nuestro DEM, luego seleccionar un filtro para seleccionar nuestro ámbito, en este caso usaremos un archivo ESRI Shapefile comprimido (\*.zip) que tenemos de nuestro ámbito de estudio. En caso no se disponga podemos seleccionar un polígono o retángulo que cubra nuestra área de interés.
+
+![](img/search_image.png){#figura1 fig-align="center" width="400"}
+
+::: callout-note
+Es posible que te salga avisos de advertencia porque el archivo brindado contiene mucho detalle de vértices, solicitándote que sea simplificado.
+:::
+
+Luego que nos selecciona los archivos que encontró en función al área establecida podemos iniciar el proceso de descarga.
+
+![](img/select_image.png){#figura2 fig-align="center"}
+
+Durante el proceso de descarga tenemos la opción de conocer mayores detalles de nuestros archivos, en este caso vemos que nos indica el tamaño total de todos archivos seleccionados, luego solo hacemos clic en el botón "Download Data".
+
+![](img/download_images.png){#figura3 width="800"}
+
+Como parte final del proceso nos debería mostrar tantos enlaces de descarga como archivos previamente seleccionados. Como se aprecia en la figura, todos están en formato comprimido, conteniendo los archivos ya descritos anteriormente.
+
+![](img/files_download.png){#figura4 fig-align="center" width="800"}
+
+Ahora que tenemos nuestros archivos descargados en nuestro carpeta de trabajo, vamos a descomprimir solo aquellos que tienen la extensión `*.hgt`.
+
+### Generación de un mosaico ráster
+
+Para nuestro caso en particular tenemos dos imágenes que cubren nuestro ámbito de estudio, por lo tanto, nuestro objetivo será unirlos para tener un mosaico. Usaremos la función `merge()` del paquete **terra** [@terra]. Para mostrar los mapas emplearemos el paquete **tmap** [@tmap] y para la generación de paleta de colores nos apoyamos con el paquete **viridis** .
+
+```{r packages}
+#| warning: false
+
+library(terra)
+library(sf)
+library(tmap)
+library(tmaptools)
+library(viridis)
+
+# Generando objetos raster con terra
+nasadem1 <- rast("data/s12w077.hgt")
+nasadem2 <- rast("data/s12w078.hgt")
+
+nasadem_mosaic <- terra::merge(nasadem1, nasadem2)
+
+tm_shape(nasadem_mosaic)+
+  tm_raster(style="cont", palette=get_brewer_pal("Greys", plot=FALSE), title = "Elevación")+
+  tm_layout(legend.outside = F)
 ```
 
-### Descarga de USSG
+### Recorte del DEM
 
-Podemos usar
+Para cumplir con nuestro objetivo vamos a incorporar nuestro ámbito de estudio y tomando sus límites para ser recortados.
 
-![](img/descarga_earth_data.png){#figure1 fig-align="center" width="800"}
+::: callout-note
+Al intentar graficar el vector que representa a la cuenca con el paquete *tmap*, verificamos que no es compatible con la clase de *SpatVector*, por lo tanto, empleamos la función `st_read()` del paquete *sf* [@sf] para incorporar un vector en el mapa.
+:::
 
-Vamos a incluir un flujo
+```{r clip}
+#| warning: false
+
+cuenca_chh <- vect("data/chancay_huaral.shp")
+cuenca_chh2 <- st_read("data/chancay_huaral.shp")
+
+nasadem_chh <- mask(nasadem_mosaic, cuenca_chh)
+
+tm_shape(nasadem_chh)+
+  tm_raster(alpha = .6, palette = "cividis", style = "cont", title = "Elevación (m)")+
+  tm_shape(cuenca_chh2)+
+  tm_borders(col="black")+
+  tm_layout(title = "Mapa de Elevación de la Cuenca Chancay-Huaral", title.position = c("right", "bottom"), legend.position = c("left", "top"))
+```
+
+::: callout-note
+Para el mapa de elevación empleamos la paleta de colores denominada "cividis", que es una versión corregida de "viridis". Mayor información del mismo lo pueden revisar en este [artículo](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0199239) [@nuñez2018].
+:::
+
+### Generación de capas sobre variables del terreno
+
+A partir de nuestro mapa de elevación ya recortado para nuestro ámbito de estudio, vamos a generar otras capas que son derivadas del mismo, entre ellos la pendiente, la orientación y también índices de terreno como el índice de posición topográfica (TPI). Ahora nos vamos apoyar con el uso de la función `terrain()` del paquete terra.
+
+```{r covariables}
+#| warning: false
+
+# Determinación de la pendiente y la orientación
+slope_chh <- terrain(nasadem_chh, v= "slope", neighbors=8, unit= "radians")
+aspect_chh <- terrain(nasadem_chh, v= "aspect", neighbors=8, unit= "radians")
+# Determinación de índices de terreno
+tri_chh <- terrain(nasadem_chh, v= "TRI") # Índice de rugosidad del terreno
+tpi_chh <- terrain(nasadem_chh, v= "TPI") # Índice de posición topográfica
+roug_chh <- terrain(nasadem_chh, v= "roughness")
+
+slp <- tm_shape(slope_chh)+
+  tm_raster(style = "cont")+
+  tm_layout(main.title = "Mapa de Pendiente")
+
+asp <- tm_shape(aspect_chh)+
+  tm_raster(style = "cont")+
+  tm_layout(main.title = "Mapa de Orientación")
+
+tri <- tm_shape(tri_chh)+
+  tm_raster(style = "cont")+
+  tm_layout(main.title = "Mapa de TRI")
+
+tpi <- tm_shape(tpi_chh)+
+  tm_raster(style = "cont")+
+  tm_layout(main.title = "Mapa de TPI")
+
+tmap_arrange(slp, asp, tri, tpi)
+```
+
+### Guardando nuestros resultados
+
+Finalmente vamos a guardar nuestros resultados obtenidos de manera individual empleando la función de terra `writeRaster()`. Vamos a considerar que lo vamos a guardar en formato GeoTiff.
+
+```{r}
+#| eval: false
+
+writeRaster(nasadem_chh, "data/dem_chancay.tif", overwrite= TRUE, filetype = "GTiff", gdal = "COMPRESS=NONE", datatype= 'INT2U')
+
+writeRaster(slope_chh, "data/slope_chancay.tif", overwrite= TRUE, filetype = "GTiff")
+
+writeRaster(aspect_chh, "data/aspect_chancay.tif", overwrite= TRUE, filetype = "GTiff")
+
+writeRaster(tri_chh, "data/tri_chancay.tif", overwrite= TRUE, filetype = "GTiff")
+
+writeRaster(tpi_chh, "data/tpi_chancay.tif", overwrite= TRUE, filetype = "GTiff")
+
+writeRaster(roug_chh, "data/roung_chancay.tif", overwrite= TRUE, filetype = "GTiff")
+```
