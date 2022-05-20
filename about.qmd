@@ -2,8 +2,4 @@
 title: "About"
 ---
 
-About this site
-
-```{r}
-1 + 1
-```
+Como parte de las metodologías que podemos emplear para lograr contar con datos requeridos para futuros procesos orientados al modelamiento, se elaboró esta guía detallada para que sea de utilidad a los investigadores en suelos.
