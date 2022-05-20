@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Elevación con R y Python</title>
+<title>Datos de Elevación con R</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -78,6 +78,25 @@ code span.st { color: #4070a0; } /* String */
 code span.va { color: #19177c; } /* Variable */
 code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
 </style>
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -156,7 +175,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <ul>
   <li><a href="#introducción" id="toc-introducción" class="nav-link active" data-scroll-target="#introducción">Introducción</a>
   <ul class="collapse">
-  <li><a href="#descarga-de-ussg" id="toc-descarga-de-ussg" class="nav-link" data-scroll-target="#descarga-de-ussg">Descarga de USSG</a></li>
+  <li><a href="#descarga-de-datos-nasadem_hgt" id="toc-descarga-de-datos-nasadem_hgt" class="nav-link" data-scroll-target="#descarga-de-datos-nasadem_hgt">Descarga de datos NASADEM_HGT</a></li>
+  <li><a href="#generación-de-un-mosaico-ráster" id="toc-generación-de-un-mosaico-ráster" class="nav-link" data-scroll-target="#generación-de-un-mosaico-ráster">Generación de un mosaico ráster</a></li>
+  <li><a href="#recorte-del-dem" id="toc-recorte-del-dem" class="nav-link" data-scroll-target="#recorte-del-dem">Recorte del DEM</a></li>
+  <li><a href="#generación-de-capas-sobre-variables-del-terreno" id="toc-generación-de-capas-sobre-variables-del-terreno" class="nav-link" data-scroll-target="#generación-de-capas-sobre-variables-del-terreno">Generación de capas sobre variables del terreno</a></li>
+  <li><a href="#guardando-nuestros-resultados" id="toc-guardando-nuestros-resultados" class="nav-link" data-scroll-target="#guardando-nuestros-resultados">Guardando nuestros resultados</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -169,7 +192,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Elevación con R y Python</h1>
+<h1 class="title">Datos de Elevación con R</h1>
 </div>
 
 
@@ -187,28 +210,198 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <section id="introducción" class="level2">
 <h2 class="anchored" data-anchor-id="introducción">Introducción</h2>
-<p>En esta oportunidad vamos a presentar la metodología para manejar datos de elevación descargados de plataformas conocidas.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
-</div>
-</div>
-<section id="descarga-de-ussg" class="level3">
-<h3 class="anchored" data-anchor-id="descarga-de-ussg">Descarga de USSG</h3>
-<p>Podemos usar</p>
-<div id="figure1" class="quarto-figure quarto-figure-center anchored">
+<p>En esta oportunidad vamos a presentar la metodología para manejar datos de un modelo de elevación digital (DSM), para nuestro caso hemos elegido emplear el <a href="https://developers.google.com/earth-engine/datasets/catalog/NASA_NASADEM_HGT_001">NASADEM</a> <span class="citation" data-cites="nasajpl2020">(<a href="#ref-nasajpl2020" role="doc-biblioref">NASA JPL 2020</a>)</span>, los cuales serán descargados de plataformas oficiales y que una vez con los archivos en formato ráster disponibles, procederemos a usar paquetes de R como Terra para lograr manejar de manera eficiente este tipo de archivos. Nuestro objetivo será contar con un mapa de elevación que cubre el ámbito de una cuenca.</p>
+<section id="descarga-de-datos-nasadem_hgt" class="level3">
+<h3 class="anchored" data-anchor-id="descarga-de-datos-nasadem_hgt">Descarga de datos NASADEM_HGT</h3>
+<p>Los productos de datos de NASADEM se derivaron de los datos de telemetría originales de la Misión Topográfica de Radar del Transbordador (SRTM), una colaboración entre la NASA y la Agencia Nacional de Inteligencia Geoespacial (NGA), así como la participación de las agencias espaciales alemana e italiana. El enfoque principal de SRTM fue generar un DEM casi global de la Tierra utilizando interferometría de radar.</p>
+<p>Las capas de productos de datos <strong>NASADEM_HGT</strong> incluyen el <strong>DEM (</strong>formato HGT<strong>)</strong>, número de escenas (<strong>NUM</strong>) y un conjunto de datos de cuerpos de agua SRTM actualizado (<strong>water mask</strong>). El tamaño del pixel es alrededor de los 30 metros, además la capa presenta unidades en metros y el tipo de datos son enteros de 16 bits. Mayores detalles técnicos sobre esta fuente de datos lo encuentran <a href="https://lpdaac.usgs.gov/documents/592/NASADEM_User_Guide_V1.pdf">aquí.</a></p>
+<p>Para acceder a los datos emplearemos el servicio de búsqueda del <a href="https://search.earthdata.nasa.gov/search?q=C1546314043-LPDAAC_ECS">NASA Earthdata</a>, el mismo que requiere estar registrado para contar con nuestro usuario y contraseña, en caso contrario no podremos acceder al servicio de descarga.</p>
+<p>Como primera acción debemos diriginos sobre el mapa de fondo al sitio de donde necesitamos descargar nuestro DEM, luego seleccionar un filtro para seleccionar nuestro ámbito, en este caso usaremos un archivo ESRI Shapefile comprimido (*.zip) que tenemos de nuestro ámbito de estudio. En caso no se disponga podemos seleccionar un polígono o retángulo que cubra nuestra área de interés.</p>
+<div id="figura1" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
-<p><img src="img/descarga_earth_data.png" class="img-fluid figure-img" width="800"></p>
+<p><img src="img/search_image.png" class="img-fluid figure-img" width="400"></p>
 </figure>
 </div>
-<p>Vamos a incluir un flujo</p>
+<div class="callout-note callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Es posible que te salga avisos de advertencia porque el archivo brindado contiene mucho detalle de vértices, solicitándote que sea simplificado.</p>
+</div>
+</div>
+<p>Luego que nos selecciona los archivos que encontró en función al área establecida podemos iniciar el proceso de descarga.</p>
+<div id="figura2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="img/select_image.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+<p>Durante el proceso de descarga tenemos la opción de conocer mayores detalles de nuestros archivos, en este caso vemos que nos indica el tamaño total de todos archivos seleccionados, luego solo hacemos clic en el botón “Download Data”.</p>
+<p><img src="img/download_images.png" id="figura3" class="img-fluid" width="800"></p>
+<p>Como parte final del proceso nos debería mostrar tantos enlaces de descarga como archivos previamente seleccionados. Como se aprecia en la figura, todos están en formato comprimido, conteniendo los archivos ya descritos anteriormente.</p>
+<div id="figura4" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="img/files_download.png" class="img-fluid figure-img" width="800"></p>
+</figure>
+</div>
+<p>Ahora que tenemos nuestros archivos descargados en nuestro carpeta de trabajo, vamos a descomprimir solo aquellos que tienen la extensión <code>*.hgt</code>.</p>
+</section>
+<section id="generación-de-un-mosaico-ráster" class="level3">
+<h3 class="anchored" data-anchor-id="generación-de-un-mosaico-ráster">Generación de un mosaico ráster</h3>
+<p>Para nuestro caso en particular tenemos dos imágenes que cubren nuestro ámbito de estudio, por lo tanto, nuestro objetivo será unirlos para tener un mosaico. Usaremos la función <code>merge()</code> del paquete <strong>terra</strong> <span class="citation" data-cites="terra">(<a href="#ref-terra" role="doc-biblioref">Hijmans 2022</a>)</span>. Para mostrar los mapas emplearemos el paquete <strong>tmap</strong> <span class="citation" data-cites="tmap">(<a href="#ref-tmap" role="doc-biblioref">Tennekes 2018</a>)</span> y para la generación de paleta de colores nos apoyamos con el paquete <strong>viridis</strong> .</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tmap)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tmaptools)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(viridis)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Generando objetos raster con terra</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>nasadem1 <span class="ot">&lt;-</span> <span class="fu">rast</span>(<span class="st">"data/s12w077.hgt"</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>nasadem2 <span class="ot">&lt;-</span> <span class="fu">rast</span>(<span class="st">"data/s12w078.hgt"</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>nasadem_mosaic <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">merge</span>(nasadem1, nasadem2)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(nasadem_mosaic)<span class="sc">+</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_raster</span>(<span class="at">style=</span><span class="st">"cont"</span>, <span class="at">palette=</span><span class="fu">get_brewer_pal</span>(<span class="st">"Greys"</span>, <span class="at">plot=</span><span class="cn">FALSE</span>), <span class="at">title =</span> <span class="st">"Elevación"</span>)<span class="sc">+</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">legend.outside =</span> F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/packages-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="recorte-del-dem" class="level3">
+<h3 class="anchored" data-anchor-id="recorte-del-dem">Recorte del DEM</h3>
+<p>Para cumplir con nuestro objetivo vamos a incorporar nuestro ámbito de estudio y tomando sus límites para ser recortados.</p>
+<div class="callout-note callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Al intentar graficar el vector que representa a la cuenca con el paquete <em>tmap</em>, verificamos que no es compatible con la clase de <em>SpatVector</em>, por lo tanto, empleamos la función <code>st_read()</code> del paquete <em>sf</em> <span class="citation" data-cites="sf">(<a href="#ref-sf" role="doc-biblioref">Pebesma 2018</a>)</span> para incorporar un vector en el mapa.</p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>cuenca_chh <span class="ot">&lt;-</span> <span class="fu">vect</span>(<span class="st">"data/chancay_huaral.shp"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>cuenca_chh2 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"data/chancay_huaral.shp"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `chancay_huaral' from data source 
+  `D:\Repositorios\DSM_INIA\github\elevation_data\data\chancay_huaral.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 1 feature and 26 fields
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: -77.249 ymin: -11.66236 xmax: -76.45693 ymax: -11.01355
+Geodetic CRS:  WGS 84</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>nasadem_chh <span class="ot">&lt;-</span> <span class="fu">mask</span>(nasadem_mosaic, cuenca_chh)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(nasadem_chh)<span class="sc">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_raster</span>(<span class="at">alpha =</span> .<span class="dv">6</span>, <span class="at">palette =</span> <span class="st">"cividis"</span>, <span class="at">style =</span> <span class="st">"cont"</span>, <span class="at">title =</span> <span class="st">"Elevación (m)"</span>)<span class="sc">+</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(cuenca_chh2)<span class="sc">+</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">col=</span><span class="st">"black"</span>)<span class="sc">+</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">title =</span> <span class="st">"Mapa de Elevación de la Cuenca Chancay-Huaral"</span>, <span class="at">title.position =</span> <span class="fu">c</span>(<span class="st">"right"</span>, <span class="st">"bottom"</span>), <span class="at">legend.position =</span> <span class="fu">c</span>(<span class="st">"left"</span>, <span class="st">"top"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/clip-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="callout-note callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para el mapa de elevación empleamos la paleta de colores denominada “cividis”, que es una versión corregida de “viridis”. Mayor información del mismo lo pueden revisar en este <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0199239">artículo</a> <span class="citation" data-cites="nuñez2018">(<a href="#ref-nuñez2018" role="doc-biblioref">Nuñez, Anderton, and Renslow 2018</a>)</span>.</p>
+</div>
+</div>
+</section>
+<section id="generación-de-capas-sobre-variables-del-terreno" class="level3">
+<h3 class="anchored" data-anchor-id="generación-de-capas-sobre-variables-del-terreno">Generación de capas sobre variables del terreno</h3>
+<p>A partir de nuestro mapa de elevación ya recortado para nuestro ámbito de estudio, vamos a generar otras capas que son derivadas del mismo, entre ellos la pendiente, la orientación y también índices de terreno como el índice de posición topográfica (TPI). Ahora nos vamos apoyar con el uso de la función <code>terrain()</code> del paquete terra.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Determinación de la pendiente y la orientación</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>slope_chh <span class="ot">&lt;-</span> <span class="fu">terrain</span>(nasadem_chh, <span class="at">v=</span> <span class="st">"slope"</span>, <span class="at">neighbors=</span><span class="dv">8</span>, <span class="at">unit=</span> <span class="st">"radians"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>aspect_chh <span class="ot">&lt;-</span> <span class="fu">terrain</span>(nasadem_chh, <span class="at">v=</span> <span class="st">"aspect"</span>, <span class="at">neighbors=</span><span class="dv">8</span>, <span class="at">unit=</span> <span class="st">"radians"</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Determinación de índices de terreno</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>tri_chh <span class="ot">&lt;-</span> <span class="fu">terrain</span>(nasadem_chh, <span class="at">v=</span> <span class="st">"TRI"</span>) <span class="co"># Índice de rugosidad del terreno</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>tpi_chh <span class="ot">&lt;-</span> <span class="fu">terrain</span>(nasadem_chh, <span class="at">v=</span> <span class="st">"TPI"</span>) <span class="co"># Índice de posición topográfica</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>roug_chh <span class="ot">&lt;-</span> <span class="fu">terrain</span>(nasadem_chh, <span class="at">v=</span> <span class="st">"roughness"</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>slp <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(slope_chh)<span class="sc">+</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_raster</span>(<span class="at">style =</span> <span class="st">"cont"</span>)<span class="sc">+</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Mapa de Pendiente"</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>asp <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(aspect_chh)<span class="sc">+</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_raster</span>(<span class="at">style =</span> <span class="st">"cont"</span>)<span class="sc">+</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Mapa de Orientación"</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>tri <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(tri_chh)<span class="sc">+</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_raster</span>(<span class="at">style =</span> <span class="st">"cont"</span>)<span class="sc">+</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Mapa de TRI"</span>)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>tpi <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(tpi_chh)<span class="sc">+</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_raster</span>(<span class="at">style =</span> <span class="st">"cont"</span>)<span class="sc">+</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Mapa de TPI"</span>)</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(slp, asp, tri, tpi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/covariables-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="guardando-nuestros-resultados" class="level3">
+<h3 class="anchored" data-anchor-id="guardando-nuestros-resultados">Guardando nuestros resultados</h3>
+<p>Finalmente vamos a guardar nuestros resultados obtenidos de manera individual empleando la función de terra <code>writeRaster()</code>. Vamos a considerar que lo vamos a guardar en formato GeoTiff.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">writeRaster</span>(nasadem_chh, <span class="st">"data/dem_chancay.tif"</span>, <span class="at">overwrite=</span> <span class="cn">TRUE</span>, <span class="at">filetype =</span> <span class="st">"GTiff"</span>, <span class="at">gdal =</span> <span class="st">"COMPRESS=NONE"</span>, <span class="at">datatype=</span> <span class="st">'INT2U'</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">writeRaster</span>(slope_chh, <span class="st">"data/slope_chancay.tif"</span>, <span class="at">overwrite=</span> <span class="cn">TRUE</span>, <span class="at">filetype =</span> <span class="st">"GTiff"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">writeRaster</span>(aspect_chh, <span class="st">"data/aspect_chancay.tif"</span>, <span class="at">overwrite=</span> <span class="cn">TRUE</span>, <span class="at">filetype =</span> <span class="st">"GTiff"</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">writeRaster</span>(tri_chh, <span class="st">"data/tri_chancay.tif"</span>, <span class="at">overwrite=</span> <span class="cn">TRUE</span>, <span class="at">filetype =</span> <span class="st">"GTiff"</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">writeRaster</span>(tpi_chh, <span class="st">"data/tpi_chancay.tif"</span>, <span class="at">overwrite=</span> <span class="cn">TRUE</span>, <span class="at">filetype =</span> <span class="st">"GTiff"</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">writeRaster</span>(roug_chh, <span class="st">"data/roung_chancay.tif"</span>, <span class="at">overwrite=</span> <span class="cn">TRUE</span>, <span class="at">filetype =</span> <span class="st">"GTiff"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
 
 
 </section>
 </section>
 
-</main> <!-- /main -->
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
+<div id="ref-terra" class="csl-entry" role="doc-biblioentry">
+Hijmans, Robert J. 2022. <span>“Terra: Spatial Data Analysis.”</span> <a href="https://CRAN.R-project.org/package=terra">https://CRAN.R-project.org/package=terra</a>.
+</div>
+<div id="ref-nasajpl2020" class="csl-entry" role="doc-biblioentry">
+NASA JPL. 2020. <span>“NASADEM Merged DEM Global 1 Arc Second V001.”</span> NASA EOSDIS Land Processes DAAC. <a href="https://doi.org/10.5067/MEASURES/NASADEM/NASADEM_HGT.001">https://doi.org/10.5067/MEASURES/NASADEM/NASADEM_HGT.001</a>.
+</div>
+<div id="ref-nuñez2018" class="csl-entry" role="doc-biblioentry">
+Nuñez, Jamie R., Christopher R. Anderton, and Ryan S. Renslow. 2018. <span>“Optimizing Colormaps with Consideration for Color Vision Deficiency to Enable Accurate Interpretation of Scientific Data.”</span> Edited by Jesús Malo. <em>PLOS ONE</em> 13 (7): e0199239. <a href="https://doi.org/10.1371/journal.pone.0199239">https://doi.org/10.1371/journal.pone.0199239</a>.
+</div>
+<div id="ref-sf" class="csl-entry" role="doc-biblioentry">
+Pebesma, Edzer. 2018. <span>“<span></span>Simple Features for r: Standardized Support for Spatial Vector Data<span></span>”</span> 10. <a href="https://doi.org/10.32614/RJ-2018-009">https://doi.org/10.32614/RJ-2018-009</a>.
+</div>
+<div id="ref-tmap" class="csl-entry" role="doc-biblioentry">
+Tennekes, Martijn. 2018. <span>“<span></span>Tmap<span></span>: Thematic Maps in <span></span>r<span></span>”</span> 84. <a href="https://doi.org/10.18637/jss.v084.i06">https://doi.org/10.18637/jss.v084.i06</a>.
+</div>
+</div></section></div></main> <!-- /main -->
 <script type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const icon = "";

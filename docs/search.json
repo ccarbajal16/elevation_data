@@ -2,9 +2,9 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Elevación con R y Python",
+    "title": "Datos de Elevación con R",
     "section": "",
-    "text": "En esta oportunidad vamos a presentar la metodología para manejar datos de elevación descargados de plataformas conocidas.\n\n1 + 1\n\n[1] 2\n\n\n\n\nPodemos usar\n\n\n\n\n\nVamos a incluir un flujo"
+    "text": "References\n\nHijmans, Robert J. 2022. “Terra: Spatial Data Analysis.” https://CRAN.R-project.org/package=terra.\n\n\nNASA JPL. 2020. “NASADEM Merged DEM Global 1 Arc Second V001.” NASA EOSDIS Land Processes DAAC. https://doi.org/10.5067/MEASURES/NASADEM/NASADEM_HGT.001.\n\n\nNuñez, Jamie R., Christopher R. Anderton, and Ryan S. Renslow. 2018. “Optimizing Colormaps with Consideration for Color Vision Deficiency to Enable Accurate Interpretation of Scientific Data.” Edited by Jesús Malo. PLOS ONE 13 (7): e0199239. https://doi.org/10.1371/journal.pone.0199239.\n\n\nPebesma, Edzer. 2018. “Simple Features for r: Standardized Support for Spatial Vector Data” 10. https://doi.org/10.32614/RJ-2018-009.\n\n\nTennekes, Martijn. 2018. “Tmap: Thematic Maps in r” 84. https://doi.org/10.18637/jss.v084.i06."
   },
   {
     "objectID": "index.html#introducción",
@@ -18,6 +18,6 @@
     "href": "about.html",
     "title": "About",
     "section": "",
-    "text": "1 + 1\n\n[1] 2"
+    "text": "Como parte de las metodologías que podemos emplear para lograr contar con datos requeridos para futuros procesos orientados al modelamiento, se elaboró esta guía detallada para que sea de utilidad a los investigadores en suelos."
   }
 ]
